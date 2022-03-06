@@ -1,6 +1,10 @@
 package com.cyrillrx.alerter.ui
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
@@ -12,9 +16,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import coil.annotation.ExperimentalCoilApi
 import com.cyrillrx.alerter.ui.theme.AppTheme
+import com.cyrillrx.alerter.validator.HtmlFetcher
+import com.cyrillrx.alerter.widget.UIWatcherItem
 import com.cyrillrx.alerter.widget.WatcherItem
-import com.cyrillrx.alerter.widget.WatcherItemData
-import okhttp3.OkHttpClient
+import kotlinx.coroutines.runBlocking
 
 @ExperimentalCoilApi
 class MainActivity : ComponentActivity() {
@@ -22,9 +27,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val items = createWatcherItems()
-
-        val client = OkHttpClient.Builder().build()
+        val items = runBlocking { createItemsToWatch().map { it.toUIWatcherItem() } }
 
         setContent {
             AppTheme {
@@ -35,45 +38,90 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun refreshItem(item: WatcherItemData) {
-        TODO()
+    private fun refreshItem(item: UIWatcherItem) {
+        val url = item.url
+        try {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(item.url))
+            startActivity(intent)
+        } catch (e: ActivityNotFoundException) {
+            Log.e(TAG, "Could not open url: $url")
+        }
+    }
+
+    companion object {
+        private const val TAG = "MainActivity"
+
+        private suspend fun WatchedItem.toUIWatcherItem(): UIWatcherItem {
+            val htmlAsText = HtmlFetcher(url).getText()
+
+            return UIWatcherItem(
+                title = title,
+                subtitle = subtitle,
+                imageUrl = imageUrl,
+                url = url,
+                inStock = validator(htmlAsText),
+            )
+        }
     }
 }
 
-private fun createWatcherItems(): Array<WatcherItemData> = arrayOf(
-    WatcherItemData(
+private fun createItemsToWatch(): List<WatchedItem> {
+    val criticalRoleValidator = { htmlAsString: String -> !htmlAsString.contains("Sold Out") }
+    val legoValidator = { htmlAsString: String -> !htmlAsString.contains("rupture de stock") }
+    val philibertValidator = { htmlAsString: String -> !htmlAsString.contains("plus en stock") }
+
+    return listOf(
+        WatchedItem(
+            url = "https://shop.critrole.eu/collections/tabletop/products/taldorei-campaign-setting-reborn",
+            validator = criticalRoleValidator,
+            title = "Critical Role",
+            subtitle = "TAL’DOREI CAMPAIGN SETTING REBORN",
+            imageUrl = "https://cdn.shopify.com/s/files/1/0598/9879/0083/products/TalDoreiRebornHero_900x.jpg?v=1642119750",
+        ),
+        WatchedItem(
+            url = "https://shop.critrole.eu/collections/tabletop/products/vox-machina-dice-set-gm",
+            validator = criticalRoleValidator,
+            title = "Critical Role",
+            subtitle = "VOX MACHINA DICE SET: GM",
+            imageUrl = "https://cdn.shopify.com/s/files/1/0598/9879/0083/products/ProductPhotos-VoxMachinaDiceSetGM-White-DiceandBag-1200x_900x.jpg?v=1637171913",
+        ),
+        WatchedItem(
+            url = "https://www.lego.com/fr-fr/product/spider-man-keyring-853950",
+            validator = legoValidator,
+            title = "Lego",
+            subtitle = "Porte-clés Spider-Man",
+            imageUrl = "https://www.lego.com/cdn/cs/set/assets/blt7be7a40979eec479/853950.jpg?fit=bounds&format=jpg&quality=80&width=1600&height=1600&dpr=1",
+        ),
+        WatchedItem(
+            url = "https://www.philibertnet.com/fr/sand-castle-games/98605-res-arcana-extension-perlae-imperii-850004236529.html",
+            validator = philibertValidator,
+            title = "Philibert",
+            subtitle = "Res Arcana : Extension Perlae Imperii",
+            imageUrl = "https://cdn1.philibertnet.com/508047-thickbox_default/res-arcana-extension-perlae-imperii.jpg",
+        ),
+    )
+}
+
+private fun createUIWatcherItems(): List<UIWatcherItem> = listOf(
+    UIWatcherItem(
         title = "Critical Role",
         subtitle = "TAL’DOREI CAMPAIGN SETTING REBORN",
-        url = "https://shop.critrole.eu/collections/tabletop/products/taldorei-campaign-setting-reborn",
         imageUrl = "https://cdn.shopify.com/s/files/1/0598/9879/0083/products/TalDoreiRebornHero_900x.jpg?v=1642119750",
+        url = "",
         inStock = false,
     ),
-    WatcherItemData(
+    UIWatcherItem(
         title = "Critical Role",
         subtitle = "VOX MACHINA DICE SET: GM",
-        url = "https://shop.critrole.eu/collections/tabletop/products/vox-machina-dice-set-gm",
         imageUrl = "https://cdn.shopify.com/s/files/1/0598/9879/0083/products/ProductPhotos-VoxMachinaDiceSetGM-White-DiceandBag-1200x_900x.jpg?v=1637171913",
-        inStock = false,
-    ),
-    WatcherItemData(
-        title = "Lego",
-        subtitle = "Porte-clés Spider-Man",
-        url = "https://www.lego.com/fr-fr/product/spider-man-keyring-853950",
-        imageUrl = "https://www.lego.com/cdn/cs/set/assets/blt7be7a40979eec479/853950.jpg?fit=bounds&format=jpg&quality=80&width=1600&height=1600&dpr=1",
-        inStock = false,
-    ),
-    WatcherItemData(
-        title = "Critical Role",
-        subtitle = "Res Arcana : Extension Perlae Imperii",
-        url = "https://www.philibertnet.com/fr/sand-castle-games/98605-res-arcana-extension-perlae-imperii-850004236529.html",
-        imageUrl = "https://cdn1.philibertnet.com/508047-thickbox_default/res-arcana-extension-perlae-imperii.jpg",
+        url = "",
         inStock = false,
     ),
 )
 
 @ExperimentalCoilApi
 @Composable
-fun AlertList(items: Array<WatcherItemData>, onItemClicked: (WatcherItemData) -> Unit) {
+fun AlertList(items: List<UIWatcherItem>, onItemClicked: (UIWatcherItem) -> Unit) {
     Column {
         items.forEach { item ->
             WatcherItem(
@@ -92,6 +140,6 @@ fun AlertList(items: Array<WatcherItemData>, onItemClicked: (WatcherItemData) ->
 @Composable
 fun DefaultPreview() {
     AppTheme {
-        AlertList(createWatcherItems()) {}
+        AlertList(createUIWatcherItems()) {}
     }
 }

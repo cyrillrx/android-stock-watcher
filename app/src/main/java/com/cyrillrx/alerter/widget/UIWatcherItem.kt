@@ -1,9 +1,9 @@
 package com.cyrillrx.alerter.widget
 
-class WatcherItemData(
+class UIWatcherItem(
     val title: String,
     val subtitle: String,
-    val url : String,
     val imageUrl: String,
+    val url: String,
     val inStock: Boolean,
 )
