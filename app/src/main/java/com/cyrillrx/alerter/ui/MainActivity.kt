@@ -1,12 +1,10 @@
 package com.cyrillrx.alerter.ui
 
-import android.content.ActivityNotFoundException
-import android.content.Intent
-import android.net.Uri
+import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -14,52 +12,28 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import coil.annotation.ExperimentalCoilApi
 import com.cyrillrx.alerter.model.WatchedProduct
 import com.cyrillrx.alerter.ui.theme.AppTheme
-import com.cyrillrx.alerter.validator.HtmlFetcher
-import com.cyrillrx.alerter.widget.UIWatcherItem
+import com.cyrillrx.alerter.widget.UiProduct
 import com.cyrillrx.alerter.widget.WatcherItem
-import kotlinx.coroutines.runBlocking
 
 @ExperimentalCoilApi
 class MainActivity : ComponentActivity() {
 
+    private val viewModel by viewModels<MainViewModel>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val items = runBlocking { createProductToWatch().map { it.toUIWatcherItem() } }
-
         setContent {
-            MainScreen(items, ::refreshItem)
+            MainScreen(viewModel)
         }
-    }
 
-    private fun refreshItem(item: UIWatcherItem) {
-        val url = item.url
-        try {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(item.url))
-            startActivity(intent)
-        } catch (e: ActivityNotFoundException) {
-            Log.e(TAG, "Could not open url: $url")
-        }
-    }
-
-    companion object {
-        private const val TAG = "MainActivity"
-
-        private suspend fun WatchedProduct.toUIWatcherItem(): UIWatcherItem {
-            val htmlAsText = HtmlFetcher(url).getText()
-
-            return UIWatcherItem(
-                title = title,
-                subtitle = subtitle,
-                imageUrl = imageUrl,
-                url = url,
-                inStock = validator(htmlAsText),
-            )
-        }
+        val initialProducts = createProductToWatch()
+        viewModel.updateProducts(initialProducts)
     }
 }
 
@@ -100,15 +74,15 @@ private fun createProductToWatch(): List<WatchedProduct> {
     )
 }
 
-private fun createUIWatcherItems(): List<UIWatcherItem> = listOf(
-    UIWatcherItem(
+private fun createUIWatcherItems(): List<UiProduct> = listOf(
+    UiProduct(
         title = "Critical Role",
         subtitle = "TAL’DOREI CAMPAIGN SETTING REBORN",
         imageUrl = "https://cdn.shopify.com/s/files/1/0598/9879/0083/products/TalDoreiRebornHero_900x.jpg?v=1642119750",
         url = "",
         inStock = false,
     ),
-    UIWatcherItem(
+    UiProduct(
         title = "Critical Role",
         subtitle = "VOX MACHINA DICE SET: GM",
         imageUrl = "https://cdn.shopify.com/s/files/1/0598/9879/0083/products/ProductPhotos-VoxMachinaDiceSetGM-White-DiceandBag-1200x_900x.jpg?v=1637171913",
@@ -119,7 +93,14 @@ private fun createUIWatcherItems(): List<UIWatcherItem> = listOf(
 
 @ExperimentalCoilApi
 @Composable
-fun MainScreen(uiItems: List<UIWatcherItem>, onItemClicked: (UIWatcherItem) -> Unit) {
+fun MainScreen(viewModel: MainViewModel) {
+    MainScreen(viewModel.uiState.products, viewModel::onItemClicked)
+}
+
+@ExperimentalCoilApi
+@Composable
+fun MainScreen(uiItems: List<UiProduct>, onItemClicked: (Context, UiProduct) -> Unit) {
+    val context = LocalContext.current
     AppTheme {
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
             LazyColumn {
@@ -129,7 +110,7 @@ fun MainScreen(uiItems: List<UIWatcherItem>, onItemClicked: (UIWatcherItem) -> U
                         subtitle = item.subtitle,
                         imageUrl = item.imageUrl,
                         inStock = item.inStock,
-                        onItemClicked = { onItemClicked(item) }
+                        onItemClicked = { onItemClicked(context, item) }
                     )
                 }
             }
@@ -141,5 +122,5 @@ fun MainScreen(uiItems: List<UIWatcherItem>, onItemClicked: (UIWatcherItem) -> U
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
-    MainScreen(createUIWatcherItems()) {}
+    MainScreen(createUIWatcherItems()) { _, _ -> }
 }
