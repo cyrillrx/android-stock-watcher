@@ -1,6 +1,6 @@
-package com.cyrillrx.alerter.ui
+package com.cyrillrx.alerter.model
 
-class WatchedItem(
+class WatchedProduct(
     val url: String,
     val validator: (String) -> Boolean,
     val title: String,
