@@ -9,10 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
@@ -76,14 +72,22 @@ fun WatcherItem(
 @ExperimentalCoilApi
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-private fun ConfigItemSwitchPreview() {
-    var enabled by remember { mutableStateOf(true) }
+private fun WatcherItemPreview() {
+    Column {
+        WatcherItem(
+            imageUrl = "",
+            title = "Title 1",
+            subtitle = "Subtitle 1",
+            inStock = true,
+            onItemClicked = {},
+        )
 
-    WatcherItem(
-        imageUrl = "",
-        title = "Titre",
-        subtitle = "Sous-titre",
-        inStock = enabled,
-        onItemClicked = { enabled = !enabled },
-    )
+        WatcherItem(
+            imageUrl = "",
+            title = "Title 2",
+            subtitle = "Subtitle 2",
+            inStock = false,
+            onItemClicked = {},
+        )
+    }
 }
