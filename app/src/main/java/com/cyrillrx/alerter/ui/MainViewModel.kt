@@ -25,14 +25,8 @@ class MainViewModel : ViewModel() {
         }
     }
 
-    fun onItemClicked(context: Context, item: UiProduct) {
-        val url = item.url
-        try {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(item.url))
-            context.startActivity(intent)
-        } catch (e: ActivityNotFoundException) {
-            Log.e(TAG, "Could not open url: $url")
-        }
+    fun onProductClicked(context: Context, item: UiProduct) {
+        openUrl(context, item.url)
     }
 
     companion object {
@@ -48,6 +42,15 @@ class MainViewModel : ViewModel() {
                 url = url,
                 inStock = validator(htmlAsText),
             )
+        }
+
+        fun openUrl(context: Context, url: String) {
+            try {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                context.startActivity(intent)
+            } catch (e: ActivityNotFoundException) {
+                Log.e(TAG, "Could not open url: $url")
+            }
         }
     }
 }

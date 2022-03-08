@@ -94,7 +94,7 @@ private fun createUIWatcherItems(): List<UiProduct> = listOf(
 @ExperimentalCoilApi
 @Composable
 fun MainScreen(viewModel: MainViewModel) {
-    MainScreen(viewModel.uiState.products, viewModel::onItemClicked)
+    MainScreen(viewModel.uiState.products, viewModel::onProductClicked)
 }
 
 @ExperimentalCoilApi
