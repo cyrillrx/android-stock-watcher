@@ -16,12 +16,12 @@ import com.cyrillrx.alerter.widget.UiProduct
 import kotlinx.coroutines.launch
 
 class MainViewModel : ViewModel() {
-    var uiState by mutableStateOf(MainScreenState(emptyList()))
+    var uiState by mutableStateOf(MainScreenState(emptyList(), isLoading = true))
 
-    fun updateProducts(products: List<WatchedProduct>) {
+    fun updateProducts(context: Context, products: List<WatchedProduct>) {
         viewModelScope.launch {
-            val uiProducts = products.map { it.toUIWatcherItem() }
-            uiState = MainScreenState(uiProducts)
+            val uiProducts = products.map { it.toUIWatcherItem(context) }
+            uiState = MainScreenState(uiProducts, isLoading = false)
         }
     }
 
@@ -32,7 +32,7 @@ class MainViewModel : ViewModel() {
     companion object {
         private const val TAG = "MainViewModel"
 
-        private suspend fun WatchedProduct.toUIWatcherItem(): UiProduct {
+        private suspend fun WatchedProduct.toUIWatcherItem(context: Context): UiProduct {
             val htmlAsText = HtmlFetcher(url).getText()
 
             return UiProduct(
@@ -41,6 +41,7 @@ class MainViewModel : ViewModel() {
                 imageUrl = imageUrl,
                 url = url,
                 inStock = validator(htmlAsText),
+                onClicked = { openUrl(context, url) },
             )
         }
 

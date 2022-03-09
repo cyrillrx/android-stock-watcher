@@ -6,4 +6,5 @@ class UiProduct(
     val imageUrl: String,
     val url: String,
     val inStock: Boolean,
+    val onClicked: () -> Unit,
 )
