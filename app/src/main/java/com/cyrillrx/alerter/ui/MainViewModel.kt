@@ -16,17 +16,25 @@ import com.cyrillrx.alerter.widget.UiProduct
 import kotlinx.coroutines.launch
 
 class MainViewModel : ViewModel() {
+    private val products: MutableList<WatchedProduct> = ArrayList()
+
     var uiState by mutableStateOf(MainScreenState(emptyList(), isLoading = true))
 
-    fun updateProducts(context: Context, products: List<WatchedProduct>) {
-        viewModelScope.launch {
-            val uiProducts = products.map { it.toUIWatcherItem(context) }
-            uiState = MainScreenState(uiProducts, isLoading = false)
+    fun setup(products: List<WatchedProduct>) {
+        this.products.apply {
+            clear()
+            addAll(products)
         }
     }
 
-    fun onProductClicked(context: Context, item: UiProduct) {
-        openUrl(context, item.url)
+    fun updateProducts(context: Context) {
+        if (products.isEmpty()) return
+
+        viewModelScope.launch {
+            uiState = MainScreenState(emptyList(), isLoading = true)
+            val uiProducts = products.map { it.toUIWatcherItem(context) }
+            uiState = MainScreenState(uiProducts, isLoading = false)
+        }
     }
 
     companion object {

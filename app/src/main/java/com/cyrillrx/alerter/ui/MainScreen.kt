@@ -1,36 +1,49 @@
 package com.cyrillrx.alerter.ui
 
+import android.content.Context
+import android.icu.text.SimpleDateFormat
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.Button
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import coil.annotation.ExperimentalCoilApi
 import com.cyrillrx.alerter.ui.theme.AppTheme
 import com.cyrillrx.alerter.widget.UiProduct
 import com.cyrillrx.alerter.widget.WatcherItem
+import java.util.Date
+import java.util.Locale
 
 @ExperimentalCoilApi
 @Composable
 fun MainScreen(viewModel: MainViewModel) {
-    MainScreen(viewModel.uiState)
+    MainScreen(viewModel.uiState, viewModel::updateProducts)
 }
 
 @ExperimentalCoilApi
 @Composable
-fun MainScreen(uiState: MainScreenState) {
+fun MainScreen(uiState: MainScreenState, updateProducts: (Context) -> Unit) {
     AppTheme {
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
-            if (uiState.isLoading) {
-                Loader()
-            } else {
-                ProductList(uiState.products)
+
+            val products = uiState.products
+            when {
+                uiState.isLoading -> Loader()
+                products.isEmpty() -> EmptyState()
+                else -> DefaultContent(products, updateProducts)
             }
         }
     }
@@ -43,17 +56,40 @@ private fun Loader() {
     )
 }
 
+@Composable
+private fun EmptyState() {
+    Text(text = "No products", modifier = Modifier.wrapContentSize(Alignment.Center))
+}
+
 @ExperimentalCoilApi
 @Composable
-private fun ProductList(uiItems: List<UiProduct>) {
-    LazyColumn {
-        items(uiItems) { item ->
+private fun DefaultContent(products: List<UiProduct>, updateProducts: (Context) -> Unit) {
+    val context = LocalContext.current
+
+    Column {
+        val time = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
+        Text(text = "Last update: $time", Modifier.padding(16.dp))
+        ProductList(products, Modifier.weight(1f))
+        Button(
+            onClick = { updateProducts(context) },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(text = "refresh")
+        }
+    }
+}
+
+@ExperimentalCoilApi
+@Composable
+private fun ProductList(products: List<UiProduct>, modifier: Modifier = Modifier) {
+    LazyColumn(modifier) {
+        items(products) { product ->
             WatcherItem(
-                title = item.title,
-                subtitle = item.subtitle,
-                imageUrl = item.imageUrl,
-                inStock = item.inStock,
-                onItemClicked = item.onClicked,
+                title = product.title,
+                subtitle = product.subtitle,
+                imageUrl = product.imageUrl,
+                inStock = product.inStock,
+                onItemClicked = product.onClicked,
             )
         }
     }
@@ -63,7 +99,7 @@ private fun ProductList(uiItems: List<UiProduct>) {
 @Preview(showBackground = true)
 @Composable
 fun MainScreenLoadingPreview() {
-    MainScreen(MainScreenState(emptyList(), true))
+    MainScreen(MainScreenState(emptyList(), true)) {}
 }
 
 @ExperimentalCoilApi
@@ -89,5 +125,5 @@ fun MainScreenPreview() {
         ),
     )
     val uiState = MainScreenState(uiProducts, false)
-    MainScreen(uiState)
+    MainScreen(uiState) {}
 }

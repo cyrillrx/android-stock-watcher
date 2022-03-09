@@ -15,12 +15,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        val initialProducts = createProductToWatch()
+        viewModel.setup(initialProducts)
+
         setContent {
             MainScreen(viewModel)
         }
 
-        val initialProducts = createProductToWatch()
-        viewModel.updateProducts(this, initialProducts)
+        viewModel.updateProducts(this)
     }
 
     companion object {
