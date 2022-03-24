@@ -53,7 +53,7 @@ class MainViewModel : ViewModel() {
             )
         }
 
-        fun openUrl(context: Context, url: String) {
+        private fun openUrl(context: Context, url: String) {
             try {
                 val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
                 context.startActivity(intent)
