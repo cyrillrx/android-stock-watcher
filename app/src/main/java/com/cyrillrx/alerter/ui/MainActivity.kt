@@ -27,7 +27,7 @@ class MainActivity : ComponentActivity() {
 
     companion object {
         private fun createProductToWatch(): List<WatchedProduct> {
-            val criticalRoleValidator = { htmlAsString: String -> !htmlAsString.contains("Sold Out") }
+            val criticalRoleValidator = { htmlAsString: String -> htmlAsString.contains("http://schema.org/InStock") }
             val legoValidator = { htmlAsString: String -> !htmlAsString.contains("rupture de stock") }
             val philibertValidator = { htmlAsString: String -> !htmlAsString.contains("plus en stock") }
 
