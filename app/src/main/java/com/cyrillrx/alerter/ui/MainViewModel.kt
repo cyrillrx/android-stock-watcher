@@ -18,21 +18,22 @@ import com.cyrillrx.alerter.widget.UiProduct
 import kotlinx.coroutines.launch
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
+
     private val products: MutableList<WatchedProduct> = ArrayList(ProductStore().get())
 
-    var uiState by mutableStateOf(MainScreenState(emptyList(), isLoading = true))
+    var uiState by mutableStateOf(MainScreenState(products = emptyList(), isLoading = true))
 
     init {
-        updateProducts(application)
+        checkIfProductsAreInStock(application)
     }
 
-    fun updateProducts(context: Context) {
+    fun checkIfProductsAreInStock(context: Context) {
         if (products.isEmpty()) return
 
         viewModelScope.launch {
-            uiState = MainScreenState(emptyList(), isLoading = true)
+            uiState = MainScreenState(products = emptyList(), isLoading = true)
             val uiProducts = products.map { it.toUIWatcherItem(context) }
-            uiState = MainScreenState(uiProducts, isLoading = false)
+            uiState = MainScreenState(products = uiProducts, isLoading = false)
         }
     }
 

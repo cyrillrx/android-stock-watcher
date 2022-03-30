@@ -3,9 +3,11 @@ package com.cyrillrx.alerter.data
 import com.cyrillrx.alerter.model.WatchedProduct
 
 class ProductStore {
-    fun get(): List<WatchedProduct> = createProductToWatch()
+    fun get(): List<WatchedProduct> = PRODUCTS
 
     companion object {
+        private val PRODUCTS = createProductToWatch()
+
         private fun createProductToWatch(): List<WatchedProduct> {
             val criticalRoleValidator = { htmlAsString: String -> htmlAsString.contains("http://schema.org/InStock") }
             val legoValidator = { htmlAsString: String -> !htmlAsString.contains("rupture de stock") }

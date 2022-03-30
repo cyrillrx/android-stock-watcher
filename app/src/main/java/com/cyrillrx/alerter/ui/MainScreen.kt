@@ -30,7 +30,7 @@ import java.util.Locale
 @ExperimentalCoilApi
 @Composable
 fun MainScreen(viewModel: MainViewModel) {
-    MainScreen(viewModel.uiState, viewModel::updateProducts)
+    MainScreen(viewModel.uiState, viewModel::checkIfProductsAreInStock)
 }
 
 @ExperimentalCoilApi
