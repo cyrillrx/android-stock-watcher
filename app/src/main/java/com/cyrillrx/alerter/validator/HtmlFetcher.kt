@@ -16,11 +16,11 @@ class HtmlFetcher(private val url: String) {
     private val httpClient = OkHttpClient.Builder().build()
 
     suspend fun getText(): String {
-        val response = httpClient.sendGetRequest(url)
         return try {
+            val response = httpClient.sendGetRequest(url)
             response.readSuccessfulBodyAsString()
         } catch (e: Exception) {
-            Log.e(TAG, "Error while reading response", e)
+            Log.e(TAG, "Error while reading response for url $url", e)
             ""
         }
     }

@@ -1,5 +1,6 @@
 package com.cyrillrx.alerter.ui
 
+import android.app.Application
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -8,23 +9,21 @@ import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.cyrillrx.alerter.data.ProductStore
 import com.cyrillrx.alerter.model.WatchedProduct
 import com.cyrillrx.alerter.validator.HtmlFetcher
 import com.cyrillrx.alerter.widget.UiProduct
 import kotlinx.coroutines.launch
 
-class MainViewModel : ViewModel() {
-    private val products: MutableList<WatchedProduct> = ArrayList()
+class MainViewModel(application: Application) : AndroidViewModel(application) {
+    private val products: MutableList<WatchedProduct> = ArrayList(ProductStore().get())
 
     var uiState by mutableStateOf(MainScreenState(emptyList(), isLoading = true))
 
-    fun setup(products: List<WatchedProduct>) {
-        this.products.apply {
-            clear()
-            addAll(products)
-        }
+    init {
+        updateProducts(application)
     }
 
     fun updateProducts(context: Context) {
@@ -40,17 +39,18 @@ class MainViewModel : ViewModel() {
     companion object {
         private const val TAG = "MainViewModel"
 
-        private suspend fun WatchedProduct.toUIWatcherItem(context: Context): UiProduct {
-            val htmlAsText = HtmlFetcher(url).getText()
+        private suspend fun WatchedProduct.toUIWatcherItem(context: Context): UiProduct = UiProduct(
+            title = title,
+            subtitle = subtitle,
+            imageUrl = imageUrl,
+            url = url,
+            inStock = isInStock(),
+            onClicked = { openUrl(context, url) },
+        )
 
-            return UiProduct(
-                title = title,
-                subtitle = subtitle,
-                imageUrl = imageUrl,
-                url = url,
-                inStock = validator(htmlAsText),
-                onClicked = { openUrl(context, url) },
-            )
+        private suspend fun WatchedProduct.isInStock(): Boolean {
+            val htmlAsText = HtmlFetcher(url).getText()
+            return validator(htmlAsText)
         }
 
         private fun openUrl(context: Context, url: String) {
